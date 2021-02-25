@@ -40,13 +40,13 @@ install_fedora() {
 
   curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
 
-  $SUDO EXTERNAL_URL="https://$DOMAIN" apt-get install gitlab-ee
+  $SUDO EXTERNAL_URL="https://$DOMAIN" dnf install gitlab-ee
 
 }
 
 install_centos() {
-  $SUDO dnf update -y
-  $SUDO dnf install -y curl policycoreutils openssh-server perl
+  $SUDO yum update -y
+  $SUDO yum install -y curl policycoreutils openssh-server perl
   $SUDO systemctl enable sshd
   $SUDO systemctl start sshd
   # Check if opening the firewall is needed with: sudo systemctl status firewalld
@@ -54,13 +54,13 @@ install_centos() {
   $SUDO firewall-cmd --permanent --add-service=https
   $SUDO systemctl reload firewalld
 
-  $SUDO dnf install postfix
+  $SUDO yum  install postfix
   $SUDO systemctl enable postfix
   $SUDO systemctl start postfix
 
   curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
 
-  $SUDO EXTERNAL_URL="https://$DOMAIN" apt-get install gitlab-ee
+  $SUDO EXTERNAL_URL="https://$DOMAIN" yum install gitlab-ee
 }
 
 usage() {
