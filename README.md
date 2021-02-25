@@ -4,7 +4,15 @@
 
 We strongly recommend choosing the official Linux package installation since it is quicker to install,
 easier to upgrade, and it contains features to enhance reliability not found in other methods.
-We also strongly recommend at least `4GB` of RAM to run GitLab.
+We also strongly recommend at least `4GB` of RAM and CPU `2` to run GitLab.
+
+# Installation
+
+This script recognize OS(linux) and start update and installation packages. It is very simple to use.
+
+```
+./install.sh
+```
 
 # About GitLab
 GitLab helps you onboard newcomers to your project faster and more easily than ever with a single tool
@@ -18,7 +26,10 @@ For more information [click here](https://about.gitlab.com/solutions/open-source
 
 # Tested on Linux
 
+This tested on GCP instances and IT WORKS!!!
+
 - Debian
 - Ubuntu
 - Fedora
 - CentOS
+- FreeBSD (coming soon)

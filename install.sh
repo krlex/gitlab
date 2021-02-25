@@ -54,13 +54,13 @@ install_centos() {
   $SUDO firewall-cmd --permanent --add-service=https
   $SUDO systemctl reload firewalld
 
-  $SUDO yum  install postfix
+  $SUDO yum  install -y postfix
   $SUDO systemctl enable postfix
   $SUDO systemctl start postfix
 
   curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
 
-  $SUDO EXTERNAL_URL="https://$DOMAIN" yum install gitlab-ee
+  $SUDO EXTERNAL_URL="https://$DOMAIN" yum install -y gitlab-ee
 }
 
 usage() {
