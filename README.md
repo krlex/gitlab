@@ -11,7 +11,16 @@ We also strongly recommend at least `4GB` of RAM and CPU `2` to run GitLab.
 This script recognize OS(linux) and start update and installation packages. It is very simple to use.
 
 ```
+./install.sh gitlab.example.com
+```
+or
+
+```
 ./install.sh
+
+Enter the DomainName:
+gitlab.example.com
+
 ```
 
 # About GitLab

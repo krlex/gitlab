@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
-DOMAIN=gitlab.example.com
+if [ -z $1 ]; then
+  echo "Enter the DomainName:"
+  read DOMAIN
+else
+  DOMAIN=$1
+fi
+
+gitlab_set(){
+  curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+}
 
 
 install_debian() {
@@ -8,7 +17,7 @@ install_debian() {
   $SUDO apt install -y apt-transport-https ca-certificates curl perl
   $SUDO apt install -y postfix
 
-  curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+  gitlab_set
 
   $SUDO EXTERNAL_URL="https://$DOMAIN" apt-get install gitlab-ee
 }
@@ -18,9 +27,9 @@ install_ubuntu() {
   $SUDO apt-get install -y curl openssh-server ca-certificates tzdata perl
   $SUDO apt-get install -y postfix
 
-  curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.deb.sh | sudo bash
+  gitlab_set
 
-  $SUDO EXTERNAL_URL="https://$DOMAIN" apt-get install gitlab-ee
+  $SUDO EXTERNAL_URL="https://$DOMAIN" apt-get install -y gitlab-ee
 
 }
 
@@ -38,9 +47,9 @@ install_fedora() {
   $SUDO systemctl enable postfix
   $SUDO systemctl start postfix
 
-  curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
+  gitlab_set
 
-  $SUDO EXTERNAL_URL="https://$DOMAIN" dnf install gitlab-ee
+  $SUDO EXTERNAL_URL="https://$DOMAIN" dnf install -y gitlab-ee
 
 }
 
@@ -58,7 +67,7 @@ install_centos() {
   $SUDO systemctl enable postfix
   $SUDO systemctl start postfix
 
-  curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
+  gitlab_set
 
   $SUDO EXTERNAL_URL="https://$DOMAIN" yum install -y gitlab-ee
 }
