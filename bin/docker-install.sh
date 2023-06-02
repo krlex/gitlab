@@ -1,5 +1,6 @@
 #!/bin/env bash
 
+
 export DEBIAN_FRONTEND=noninteractive
 export GITLAB_HOME=$HOME/gitlab
 sudo ufw allow 80
