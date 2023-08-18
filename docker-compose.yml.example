@@ -1,0 +1,200 @@
+---
+version: '3'
+
+networks:
+  lb_web:
+    external: true
+  back:
+    driver: bridge
+
+
+services:
+  redis:
+    restart: always
+    image: sameersbn/redis:latest
+    container_name: redis
+    command:
+    - --loglevel warning
+    volumes:
+    - /srv/docker/gitlab/redis:/var/lib/redis:Z
+    networks:
+    - back
+
+  postgresql:
+    restart: always
+    image: sameersbn/postgresql:9.6-2
+    container_name: postgresql
+    volumes:
+    - /srv/docker/gitlab/postgresql:/var/lib/postgresql:Z
+    environment:
+    - DB_USER=gitlab
+    - DB_PASS=password
+    - DB_NAME=gitlabhq_production
+    - DB_EXTENSION=pg_trgm
+    networks:
+    - back
+
+  gitlab:
+    restart: always
+    image: sameersbn/gitlab:8.16.6
+    container_name: gitlab
+    depends_on:
+    - redis
+    - postgresql
+    external_links: 
+    - registry:registry.localhost
+    expose:
+        - "80"
+    ports:
+    - "10022:22"
+    - "10443:443"
+    - "5005:5005"
+    volumes:
+    - /srv/docker/gitlab/gitlab:/home/git/data:Z
+    - /srv/docker/gitlab/gitlab/certs:/home/git/data/certs
+    - /srv/docker/gitlab/logs:/var/log/gitlab
+    - /var/run/docker.sock:/var/run/docker.sock
+    hostname: localhost
+    environment:   
+    - DEBUG=false
+
+    - DB_ADAPTER=postgresql
+    - DB_HOST=postgresql
+    - DB_PORT=5432
+    - DB_USER=gitlab
+    - DB_PASS=password
+    - DB_NAME=gitlabhq_production
+
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+
+    - TZ=America/Los_Angeles
+    - GITLAB_TIMEZONE=America/Los_Angeles
+
+    - GITLAB_HTTPS=true
+    - SSL_SELF_SIGNED=true
+
+    - GITLAB_HOST=localhost
+    - GITLAB_PORT=10443
+    - GITLAB_SSH_PORT=10022
+    - GITLAB_RELATIVE_URL_ROOT=
+    - GITLAB_SECRETS_DB_KEY_BASE=xxxxxxxx
+    - GITLAB_SECRETS_SECRET_KEY_BASE=xxxxxxx
+    - GITLAB_SECRETS_OTP_KEY_BASE=xxxxxx
+    - GITLAB_ROOT_PASSWORD=xxxxx
+    - GITLAB_ROOT_EMAIL=xxxx@gmail.com
+
+    - GITLAB_NOTIFY_ON_BROKEN_BUILDS=true
+    - GITLAB_NOTIFY_PUSHER=true
+
+
+    - GITLAB_EMAIL=xxxxx@gmail.com
+    - GITLAB_EMAIL_REPLY_TO=xxxxxx@gmail.com
+    - GITLAB_INCOMING_EMAIL_ADDRESS=xxxxxx@gmail.com
+
+    - GITLAB_BACKUP_SCHEDULE=daily
+    - GITLAB_BACKUP_TIME=01:00
+
+    - SMTP_ENABLED=true
+    - SMTP_DOMAIN=www.gmail.com
+    - SMTP_HOST=smtp.gmail.com
+    - SMTP_PORT=587
+    - SMTP_USER=xxxxx@gmail.com
+    - SMTP_PASS=password
+    - SMTP_STARTTLS=true
+    - SMTP_AUTHENTICATION=login
+
+    - IMAP_ENABLED=true
+    - IMAP_HOST=imap.gmail.com
+    - IMAP_PORT=993
+    - IMAP_USER=xxxx@gmail.com
+    - IMAP_PASS=password
+    - IMAP_SSL=true
+    - IMAP_STARTTLS=
+    
+    - VIRTUAL_HOST=localhost
+
+    - SSL_CERTIFICATE_PATH=/home/git/data/certs/gitlab.crt
+    - SSL_KEY_PATH =/home/git/data/certs/gitlab.key
+
+    - SSL_CA_CERTIFICATES_PATH=/home/git/data/certs/gitlab.crt
+    
+    - SSL_DHPARAM_PATH=/home/git/data/certs/dhparam.pem
+
+    - GITLAB_REPOS_DIR=/home/git/data/repositories
+    - GITLAB_BACKUP_DIR=/home/git/data/backups
+    - GITLAB_SHARED_DIR=/home/git/data/shared
+    - GITLAB_BUILDS_DIR=/home/git/data/builds
+    - GITLAB_ARTIFACTS_DIR=/home/git/data/shared/artifacts
+
+    - GITLAB_PROJECTS_CONTAINER_REGISTRY=true
+    - GITLAB_REGISTRY_DIR=/home/git/data/shared/registry
+
+    - GITLAB_REGISTRY_ENABLED=true
+    - GITLAB_REGISTRY_HOST=registry.localhost
+    - GITLAB_REGISTRY_PORT=5005
+    - GITLAB_REGISTRY_API_URL=http://registry.localhost:5000
+    
+    - GITLAB_REGISTRY_CERT_PATH=/home/git/data/certs/registry.crt
+    - GITLAB_REGISTRY_KEY_PATH=/home/git/data/certs/registry.key
+    - GITLAB_REGISTRY_ISSUER=gitlab-issuer
+
+    - SSL_REGISTRY_KEY_PATH=/home/git/data/certs/registry.key
+    - SSL_REGISTRY_CERT_PATH=/home/git/data/certs/registry.crt
+    
+
+    networks:
+    - back
+    - lb_web
+
+  registry:
+    restart: always
+    image: registry:2.5
+    container_name: registry
+    volumes:
+        - /srv/docker/registry:/registry
+        - /srv/docker/gitlab/gitlab/certs:/home/git/data/certs
+    ports:
+        - "5000:5000"
+    external_links:
+        - "gitlab:localhost"
+    environment:
+        - REGISTRY_LOG_LEVEL=info
+        - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/registry
+        - REGISTRY_AUTH_TOKEN_REALM=https://localhost:10443/jwt/auth
+        - REGISTRY_AUTH_TOKEN_SERVICE=container_registry
+        - REGISTRY_AUTH_TOKEN_ISSUER=gitlab-issuer
+        - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/home/git/data/certs/registry.crt
+        - REGISTRY_STORAGE_DELETE_ENABLED=true
+
+        - REGISTRY_HTTP_SECRET=xxxxxx
+    networks:
+        - back
+
+  nginx:
+    restart: always
+    image: nginx
+    container_name: nginx
+    links:
+        - registry
+    volumes:
+        - /srv/docker/nginx/nginx.conf:/etc/nginx/nginx.conf    
+    environment:
+        - VIRTUAL_HOST=registry.localhost
+        - REGISTRY_HTTP_RELATIVEURLS=true  
+    networks:
+        - back
+        - lb_web
+
+  gitlab-runner:
+    restart: always
+    image: gitlab/gitlab-runner:latest
+    container_name: gitlab-runner
+    volumes:
+        - /srv/gitlab-runner/config:/etc/gitlab-runner
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /srv/docker/gitlab/gitlab/certs:/etc/gitlab-runner/certs
+    environment:
+        - CA_CERTIFICATES_PATH=/home/git/data/certs/gitlab.crt
+    networks:
+        - back
