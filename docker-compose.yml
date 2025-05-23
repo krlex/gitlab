@@ -1,6 +1,3 @@
----
-
-version: '3.6'
 services:
   web:
     container_name: gitlab
@@ -13,10 +10,14 @@ services:
         # Add any other gitlab.rb configuration here, each on its own line
     ports:
       - '80:80'
-        #- '443:443'
-        #- '22:22'
+      - '22:22'
     volumes:
-      - '$GITLAB_HOME/config:/etc/gitlab'
-      - '$GITLAB_HOME/logs:/var/log/gitlab'
-      - '$GITLAB_HOME/data:/var/opt/gitlab'
+      - 'gitlab_config:/etc/gitlab'
+      - 'gitlab_logs:/var/log/gitlab'
+      - 'gitlab_data:/var/opt/gitlab'
     shm_size: '256m'
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
